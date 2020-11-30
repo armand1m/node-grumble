@@ -1,4 +1,4 @@
-import { NodeGrumble, Events, MessageType } from '../src';
+import { NodeGrumble, Events, MessageType } from '../';
 
 const main = async () => {
   const grumble = NodeGrumble.create({
@@ -16,19 +16,21 @@ const main = async () => {
   });
 
   connection.on(Events.Packet, (packet) => {
-    console.log(packet);
-
     if (packet.type === MessageType.UserState) {
-      console.log("user state changes received");
-      console.log(packet.message.name)
+      console.log('user state changes received');
+      console.log(packet.message.name);
     }
+  });
+
+  connection.on(MessageType.ChannelState, (channelState) => {
+    console.log('Received Channel State event:', channelState);
   });
 
   connection.on(Events.Close, () => {
     console.log('Connection got closed.');
   });
 
-  process.on('SIGINT', function() {
+  process.on('SIGINT', function () {
     connection.disconnect();
   });
 };

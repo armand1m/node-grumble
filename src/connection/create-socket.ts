@@ -1,5 +1,4 @@
 import tls from 'tls';
-import { TypedEventEmitter } from '../structures/EventEmitter';
 import { Writer } from 'protobufjs';
 import {
   Events,
@@ -12,6 +11,8 @@ import {
   writePacketToSocket,
   createMumbleProtobufDecoder,
 } from '../proto/protobuf';
+import { TypedEventEmitter } from '../structures/EventEmitter';
+import { createAudioInterface } from './create-audio-interface';
 
 export const createSocket = async (
   finalOptions: CompleteGrumbleOptions
@@ -41,6 +42,9 @@ export const createSocket = async (
      *
      * Keeps reading data from the socket and emitting events
      * as they're processed and decoded.
+     *
+     * The `data` buffer is constantly mutated from the Mumble Server,
+     * and from this event handler as it cleans the data buffer.
      */
     while (data.length > 6) {
       const typeId = data.readUInt16BE(0);
@@ -63,28 +67,31 @@ export const createSocket = async (
       data = data.slice(buffer.length + 6);
 
       if (typeId === Messages.UDPTunnel) {
+        if (process.env.DEBUG_UDP) {
+          console.log('UDPTunnel message received:', buffer);
+        }
+
         /**
-         * TODO: Setup Opus encoder first then get the readAudio function from here:
+         * TODO: Adapt the readAudio function from here:
          * https://github.com/Gielert/NoodleJS/blob/master/src/Connection.js#L96
          */
-        // this.readAudio(data);
+        // readAudio(data);
         break;
       }
 
       const packet = decodeMessage(typeId, buffer);
-
       events.emit(Events.Packet, packet);
       events.emit(packet.type, packet.message);
     }
   });
 
   const write = (type: Messages, writer: Writer) => {
-    writePacketToSocket(type, writer.finish(), socket);
+    return writePacketToSocket(type, writer.finish(), socket);
   };
 
-  const disconnect = () => {
-    socket.end();
-  };
+  const disconnect = () => socket.end();
 
-  return { events, write, disconnect };
+  const { writeAudio } = createAudioInterface(socket);
+
+  return { events, write, disconnect, writeAudio };
 };

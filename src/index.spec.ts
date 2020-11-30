@@ -1,14 +1,20 @@
+import path from 'path';
 import { NodeGrumble, Events, MessageType } from '.';
 
-/**
- * TODO: Test error scenarios.
- */
+const testAudioPath = path.resolve(
+  __dirname,
+  './__fixtures__/test.mp3'
+);
 
+/**
+ * TODO: Test more error scenarios.
+ * TODO: Break the connection test into multiple scenarios.
+ */
 describe('node-grumble client integration tests', () => {
   it('should connect', async (done) => {
     jest.setTimeout(30000);
 
-    const grumble = NodeGrumble.create({ url: 'intruder.network' });
+    const grumble = NodeGrumble.create({ url: 'armand1m.dev' });
     const connection = await grumble.connect();
 
     connection.on(Events.Connected, () => {
@@ -21,12 +27,10 @@ describe('node-grumble client integration tests', () => {
 
     connection.on(Events.Packet, (packet) => {
       console.log(packet);
+    });
 
-      if (packet.type === MessageType.UserState) {
-        console.log(
-          `UserState packet received: ${packet.message.name}`
-        );
-      }
+    connection.on(MessageType.UserState, (userState) => {
+      console.log(`UserState packet received: ${userState.name}`);
     });
 
     connection.on(Events.Close, () => {
@@ -38,6 +42,10 @@ describe('node-grumble client integration tests', () => {
     const textInterval = setInterval(() => {
       connection.sendTextMessage('oi guilerme tudo bem');
     }, 5000);
+
+    setTimeout(() => {
+      connection.playFile(testAudioPath);
+    }, 6000);
 
     setTimeout(() => {
       connection.disconnect();

@@ -1,12 +1,14 @@
 import { Messages, NodeGrumbleOptions } from './types';
 import { TextMessage } from './proto/Mumble';
 import { createConnection } from './connection/create-connection';
+import { AudioDispatcher } from './connection/create-audio-dispatcher';
 
 export const NodeGrumble = {
   create: (options: NodeGrumbleOptions) => {
     return {
       connect: async () => {
         const connection = await createConnection(options);
+        const audioDispatcher = new AudioDispatcher(connection, 0);
 
         const handlers = {
           sendTextMessage: (
@@ -24,9 +26,12 @@ export const NodeGrumble = {
             );
           },
           playFile: (filepath: string) => {
-            console.log(`triggering play for "${filepath}"`);
+            audioDispatcher.playFile(filepath);
           },
-          disconnect: connection.disconnect.bind(connection),
+          disconnect: () => {
+            connection.disconnect();
+            audioDispatcher.close();
+          },
           on: connection.events.on.bind(connection.events),
         };
 

@@ -3,6 +3,7 @@ import {
   NodeGrumbleOptions,
   Events,
   Messages,
+  UnwrapPromise,
 } from '../types';
 import { Authenticate, Ping, Version } from '../proto/Mumble';
 import { encodeVersion } from '../proto/protobuf';
@@ -17,6 +18,10 @@ const defaultOptions: CompleteGrumbleOptions = {
   tokens: [],
 };
 
+export type Connection = UnwrapPromise<
+  ReturnType<typeof createConnection>
+>;
+
 export const createConnection = async (
   options: NodeGrumbleOptions
 ) => {
@@ -25,9 +30,12 @@ export const createConnection = async (
     ...options,
   };
 
-  const { events, write, disconnect } = await createSocket(
-    completeOptions
-  );
+  const {
+    events,
+    write,
+    writeAudio,
+    disconnect,
+  } = await createSocket(completeOptions);
 
   let pingInterval: NodeJS.Timeout | undefined;
 
@@ -66,6 +74,7 @@ export const createConnection = async (
 
   return {
     write,
+    writeAudio,
     events,
     disconnect,
   };
