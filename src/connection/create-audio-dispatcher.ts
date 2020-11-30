@@ -1,16 +1,7 @@
 import { EventEmitter } from 'events';
 import { Writable as WritableStream } from 'stream';
-import ffmpeg from 'fluent-ffmpeg';
-
+import { defaultAudioConfig } from './audio-configuration';
 import { Connection } from './create-connection';
-
-const defaultAudioConfig = {
-  sampleRate: 48000,
-  channels: 1,
-  bitDepth: 16,
-  frameSize: 480,
-  frameLength: 10,
-};
 
 /**
  * TODO: Cleanup this class.
@@ -61,6 +52,7 @@ export class AudioDispatcher extends WritableStream {
     this.lastFrame = this._createFrameBuffer();
     this.lastFrameWritten = 0;
     this.lastWrite = null;
+    this.voiceSequence = 0;
   }
 
   set volume(volume) {
@@ -88,7 +80,6 @@ export class AudioDispatcher extends WritableStream {
       this.lastWrite + 20 * defaultAudioConfig.frameLength <
         Date.now()
     ) {
-      // this.voiceSequence = this.connection.voiceSequence;
       this.lastWrite = Date.now();
       return;
     }
@@ -101,7 +92,7 @@ export class AudioDispatcher extends WritableStream {
         let frame = this.frameQueue.shift();
 
         if (!frame) {
-          return;
+          break;
         }
 
         if (this._volume !== 1) {
@@ -133,11 +124,11 @@ export class AudioDispatcher extends WritableStream {
     return;
   }
 
-  _write(chunk: any, encoding: any, next: () => void) {
+  _write(chunk: Buffer, encoding: BufferEncoding, cb: () => void) {
     while (true) {
       if (this.frameQueue.length >= defaultAudioConfig.frameLength) {
         this.processObserver.once('written', () => {
-          this._write(chunk, encoding, next);
+          this._write(chunk, encoding, cb);
         });
         return;
       }
@@ -158,21 +149,8 @@ export class AudioDispatcher extends WritableStream {
       if (chunk.length > written - writtenBefore) {
         chunk = chunk.slice(written - writtenBefore);
       } else {
-        return next();
+        return cb();
       }
     }
-  }
-
-  playFile(filename: string) {
-    const command = ffmpeg(filename)
-      .output(this)
-      .audioFrequency(48000)
-      .audioChannels(1)
-      .format('s16le')
-      .on('error', (e) => {
-        this.emit('error', e);
-      });
-
-    command.run();
   }
 }

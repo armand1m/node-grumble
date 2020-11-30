@@ -2,14 +2,7 @@ import { TLSSocket } from 'tls';
 import { OpusEncoder } from '@discordjs/opus';
 import { Codec, Messages } from '../types';
 import * as Varint from '../structures/Varint';
-
-const defaultAudioConfig = {
-  sampleRate: 48000,
-  channels: 1,
-  bitDepth: 16,
-  frameSize: 480,
-  frameLength: 10,
-};
+import { defaultAudioConfig } from './audio-configuration';
 
 export const createAudioInterface = (socket: TLSSocket) => {
   const opusEncoder = new OpusEncoder(
@@ -24,12 +17,12 @@ export const createAudioInterface = (socket: TLSSocket) => {
   let voiceSequence = 0;
 
   function writeAudio(
-    rawPacket: Buffer,
+    buffer: Buffer,
     whisperTarget?: number,
     initialVoiceSequence?: number,
     isFinal?: boolean
   ) {
-    const packet = opusEncoder.encode(rawPacket);
+    const encodedBuffer = opusEncoder.encode(buffer);
 
     const target = whisperTarget || 0;
     const typeTarget = (Codec.Opus << 5) | target;
@@ -42,22 +35,22 @@ export const createAudioInterface = (socket: TLSSocket) => {
     voiceHeader[0] = typeTarget;
     sequenceVarint.value.copy(voiceHeader, 1, 0);
 
-    if (packet.length > 0x1fff) {
+    if (encodedBuffer.length > 0x1fff) {
       throw new TypeError(
         `Audio frame too long! Max Opus length is ${0x1fff} bytes.`
       );
     }
 
     const headerValue = isFinal
-      ? packet.length + (1 << 7)
-      : packet.length;
+      ? encodedBuffer.length + (1 << 7)
+      : encodedBuffer.length;
 
     const headerVarint = Varint.encode(headerValue);
     const header = headerVarint.value;
 
-    const frame = Buffer.alloc(header.length + packet.length);
+    const frame = Buffer.alloc(header.length + encodedBuffer.length);
     header.copy(frame, 0);
-    packet.copy(frame, header.length);
+    encodedBuffer.copy(frame, header.length);
 
     currentVoiceSequence++;
 

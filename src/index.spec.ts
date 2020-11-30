@@ -14,7 +14,7 @@ describe('node-grumble client integration tests', () => {
   it('should connect', async (done) => {
     jest.setTimeout(30000);
 
-    const grumble = NodeGrumble.create({ url: 'armand1m.dev' });
+    const grumble = NodeGrumble.create({ url: 'intruder.network' });
     const connection = await grumble.connect();
 
     connection.on(Events.Connected, () => {
@@ -35,28 +35,29 @@ describe('node-grumble client integration tests', () => {
 
     connection.on(Events.Close, () => {
       console.log('Connection got closed.');
-      clearInterval(textInterval);
+      // clearInterval(textInterval);
+      clearInterval(playInterval);
       done();
     });
 
-    const textInterval = setInterval(() => {
-      connection.sendTextMessage('oi guilerme tudo bem');
-    }, 5000);
+    // const textInterval = setInterval(() => {
+    //   connection.sendTextMessage('oi guilerme tudo bem');
+    // }, 5000);
 
-    setTimeout(() => {
+    const playInterval = setInterval(() => {
       connection.playFile(testAudioPath);
     }, 6000);
 
-    setTimeout(() => {
-      connection.disconnect();
-    }, 18000);
+    // setTimeout(() => {
+    //   connection.disconnect();
+    // }, 18000);
   });
 
-  it('should fail to connect', () => {
-    expect(() => {
-      return NodeGrumble.create({
-        url: 'nonexistant.server',
-      }).connect();
-    }).rejects.toThrow();
-  });
+  // it('should fail to connect', () => {
+  //   expect(() => {
+  //     return NodeGrumble.create({
+  //       url: 'nonexistant.server',
+  //     }).connect();
+  //   }).rejects.toThrow();
+  // });
 });
