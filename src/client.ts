@@ -4,7 +4,7 @@ import {
   Connection,
   NodeGrumbleOptions,
 } from './types';
-import { TextMessage } from './generated/Mumble';
+import { TextMessage } from './proto/Mumble';
 import { createConnection } from './connection/create-connection';
 
 class NodeGrumbleConnection {

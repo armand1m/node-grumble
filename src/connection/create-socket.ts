@@ -5,7 +5,7 @@ import { Events, Messages, CompleteGrumbleOptions } from '../types';
 import {
   writePacketToSocket,
   createMumbleProtobufDecoder,
-} from '../protobuf';
+} from '../proto/protobuf';
 
 export const createSocket = async (
   finalOptions: CompleteGrumbleOptions

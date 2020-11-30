@@ -4,10 +4,7 @@ describe('node-grumble client integration tests', () => {
   it('should connect', async (done) => {
     jest.setTimeout(30000);
 
-    const grumble = new NodeGrumble({
-      url: 'armand1m.dev',
-    });
-
+    const grumble = new NodeGrumble({ url: 'armand1m.dev' });
     const connection = await grumble.connect();
 
     connection.on(Events.Connected, () => {

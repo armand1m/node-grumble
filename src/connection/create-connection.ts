@@ -5,8 +5,8 @@ import {
   Messages,
   Connection,
 } from '../types';
-import { Authenticate, Ping, Version } from '../generated/Mumble';
-import { encodeVersion } from '../protobuf';
+import { Authenticate, Ping, Version } from '../proto/Mumble';
+import { encodeVersion } from '../proto/protobuf';
 import { createSocket } from './create-socket';
 
 const defaultOptions: CompleteGrumbleOptions = {

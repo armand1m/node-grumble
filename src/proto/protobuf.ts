@@ -1,9 +1,9 @@
 import { TLSSocket } from 'tls';
 import path from 'path';
 import protobufjs from 'protobufjs';
-import { Messages, MessageType, Packet } from './types';
+import { Messages, MessageType, Packet } from '../types';
 
-const protoFilePath = path.join(__dirname, './proto/Mumble.proto');
+const protoFilePath = path.join(__dirname, './Mumble.proto');
 
 export const encodeVersion = (
   major: number,
@@ -46,6 +46,9 @@ export const createMumbleProtobufDecoder = async () => {
     return packet.encode(message).finish();
   };
 
+  /**
+   * TODO: Try to infer the packet types and make ts types compliant
+   */
   const decodeMessage = (typeId: Messages, buffer: Buffer) => {
     const type = Messages[typeId] as MessageType;
     const packet = protobuf.lookupType(`MumbleProto.${type}`);
