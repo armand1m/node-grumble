@@ -75,7 +75,9 @@ export const createSocket = async (
     writePacketToSocket(type, writer.finish(), socket);
   };
 
-  const disconnect = () => socket.end();
+  const disconnect = () => {
+    socket.end();
+  };
 
   return { events, write, disconnect };
 };
