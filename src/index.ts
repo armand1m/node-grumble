@@ -1,2 +1,2 @@
 export { NodeGrumble } from './client';
-export { Events } from './types';
+export { Events, MessageType } from './types';

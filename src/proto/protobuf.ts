@@ -1,7 +1,7 @@
 import { TLSSocket } from 'tls';
 import path from 'path';
 import protobufjs from 'protobufjs';
-import { Messages, MessageType, Packet } from '../types';
+import { Messages, Packet } from '../types';
 
 const protoFilePath = path.join(__dirname, './Mumble.proto');
 
@@ -31,28 +31,11 @@ export const writePacketToSocket = (
 export const createMumbleProtobufDecoder = async () => {
   const protobuf = await protobufjs.load(protoFilePath);
 
-  /**
-   * TODO: Consider removing encodeMessage as it is not being used.
-   * Try to find a way to use the generated libraries instead of this, since they do the encoding.
-   */
-  const encodeMessage = (type: MessageType, payload: object) => {
-    const packet = protobuf.lookupType(`MumbleProto.${type}`);
-
-    if (packet.verify(payload)) {
-      throw new Error(`Error verifying payload for packet ${type}`);
-    }
-
-    const message = packet.create(payload);
-    return packet.encode(message).finish();
-  };
-
-  /**
-   * TODO: Try to infer the packet types and make ts types compliant
-   */
   const decodeMessage = (typeId: Messages, buffer: Buffer) => {
-    const type = Messages[typeId] as MessageType;
+    const type = Messages[typeId];
     const packet = protobuf.lookupType(`MumbleProto.${type}`);
     const message = packet.decode(buffer).toJSON();
+
     return {
       type,
       message,
@@ -60,7 +43,6 @@ export const createMumbleProtobufDecoder = async () => {
   };
 
   return {
-    encodeMessage,
     decodeMessage,
   };
 };

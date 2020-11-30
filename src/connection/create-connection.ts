@@ -3,7 +3,6 @@ import {
   NodeGrumbleOptions,
   Events,
   Messages,
-  Connection,
 } from '../types';
 import { Authenticate, Ping, Version } from '../proto/Mumble';
 import { encodeVersion } from '../proto/protobuf';
@@ -20,7 +19,7 @@ const defaultOptions: CompleteGrumbleOptions = {
 
 export const createConnection = async (
   options: NodeGrumbleOptions
-): Promise<Connection> => {
+) => {
   const completeOptions: CompleteGrumbleOptions = {
     ...defaultOptions,
     ...options,

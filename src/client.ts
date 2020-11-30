@@ -1,49 +1,37 @@
-import {
-  Events,
-  Messages,
-  Connection,
-  NodeGrumbleOptions,
-} from './types';
+import { Messages, NodeGrumbleOptions } from './types';
 import { TextMessage } from './proto/Mumble';
 import { createConnection } from './connection/create-connection';
 
-class NodeGrumbleConnection {
-  private connection: Connection;
+export const NodeGrumble = {
+  create: (options: NodeGrumbleOptions) => {
+    return {
+      connect: async () => {
+        const connection = await createConnection(options);
 
-  constructor(connection: Connection) {
-    this.connection = connection;
-  }
+        const handlers = {
+          sendTextMessage: (
+            message: string,
+            channelId: number = 0
+          ) => {
+            const textMessage = TextMessage.fromPartial({
+              channelId: [channelId],
+              message,
+            });
 
-  disconnect() {
-    this.connection.disconnect();
-  }
+            connection.write(
+              Messages.TextMessage,
+              TextMessage.encode(textMessage)
+            );
+          },
+          playFile: (filepath: string) => {
+            console.log(`triggering play for "${filepath}"`);
+          },
+          disconnect: connection.disconnect.bind(connection),
+          on: connection.events.on.bind(connection.events),
+        };
 
-  on(event: Events, callback: (data?: any) => void) {
-    this.connection.events.on(event, callback);
-  }
-
-  sendTextMessage(message: string, channelId: number = 0) {
-    const textMessage = TextMessage.fromPartial({
-      channelId: [channelId],
-      message,
-    });
-
-    this.connection.write(
-      Messages.TextMessage,
-      TextMessage.encode(textMessage)
-    );
-  }
-}
-
-export class NodeGrumble {
-  private options: NodeGrumbleOptions;
-
-  constructor(options: NodeGrumbleOptions) {
-    this.options = options;
-  }
-
-  async connect() {
-    const connection = await createConnection(this.options);
-    return new NodeGrumbleConnection(connection);
-  }
-}
+        return handlers;
+      },
+    };
+  },
+};

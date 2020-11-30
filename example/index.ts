@@ -1,7 +1,7 @@
-import { NodeGrumble, Events } from '../src';
+import { NodeGrumble, Events, MessageType } from '../src';
 
 const main = async () => {
-  const grumble = new NodeGrumble({
+  const grumble = NodeGrumble.create({
     url: 'intruder.network',
   });
 
@@ -17,6 +17,11 @@ const main = async () => {
 
   connection.on(Events.Packet, (packet) => {
     console.log(packet);
+
+    if (packet.type === MessageType.UserState) {
+      console.log("user state changes received");
+      console.log(packet.message.name)
+    }
   });
 
   connection.on(Events.Close, () => {

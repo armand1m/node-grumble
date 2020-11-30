@@ -1,7 +1,13 @@
 import tls from 'tls';
-import { EventEmitter } from 'events';
+import { TypedEventEmitter } from '../structures/EventEmitter';
 import { Writer } from 'protobufjs';
-import { Events, Messages, CompleteGrumbleOptions } from '../types';
+import {
+  Events,
+  Messages,
+  MessageEventMap,
+  CompleteGrumbleOptions,
+  EventMap,
+} from '../types';
 import {
   writePacketToSocket,
   createMumbleProtobufDecoder,
@@ -10,29 +16,26 @@ import {
 export const createSocket = async (
   finalOptions: CompleteGrumbleOptions
 ) => {
-  /**
-   * TODO: Get some types around EventEmitter
-   * https://rjzaworski.com/2019/10/event-emitters-in-typescript
-   */
-  const events = new EventEmitter();
-  const { decodeMessage } = await createMumbleProtobufDecoder();
+  const events = new TypedEventEmitter<MessageEventMap & EventMap>();
 
   const socket = tls.connect(
     finalOptions.port,
     finalOptions.url,
     finalOptions,
-    () => events.emit(Events.Connected)
+    () => events.emit(Events.Connected, undefined)
   );
 
   socket.on('close', () => {
-    events.emit(Events.Close);
+    events.emit(Events.Close, undefined);
   });
 
-  socket.on('error', (error) => {
+  socket.on('error', (error: Error) => {
     events.emit(Events.Error, error);
   });
 
-  socket.on('data', (data) => {
+  socket.on('data', async (data: Buffer) => {
+    const { decodeMessage } = await createMumbleProtobufDecoder();
+
     /**
      * Data Ingestion Loop.
      *
@@ -68,10 +71,10 @@ export const createSocket = async (
         break;
       }
 
-      const { type, message } = decodeMessage(typeId, buffer);
+      const packet = decodeMessage(typeId, buffer);
 
-      events.emit('packet', { type, message });
-      events.emit(type, message);
+      events.emit(Events.Packet, packet);
+      events.emit(packet.type, packet.message);
     }
   });
 
