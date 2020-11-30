@@ -10,6 +10,10 @@ import {
 export const createSocket = async (
   finalOptions: CompleteGrumbleOptions
 ) => {
+  /**
+   * TODO: Get some types around EventEmitter
+   * https://rjzaworski.com/2019/10/event-emitters-in-typescript
+   */
   const events = new EventEmitter();
   const { decodeMessage } = await createMumbleProtobufDecoder();
 

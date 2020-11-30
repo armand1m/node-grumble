@@ -68,7 +68,11 @@ export const createAudioInterface = (socket: TLSSocket) => {
     1
   );
 
-  let _voiceSequence = 0;
+  /**
+   * TODO: Review the voice sequence implementation and mutation.
+   * Looks unnecessary and buggy.
+   */
+  let voiceSequence = 0;
 
   function writeAudio(
     rawPacket: Buffer,
@@ -81,9 +85,9 @@ export const createAudioInterface = (socket: TLSSocket) => {
     const target = whisperTarget || 0;
     const typeTarget = (Codec.Opus << 5) | target;
 
-    let voiceSequence = initialVoiceSequence ?? _voiceSequence;
+    let currentVoiceSequence = initialVoiceSequence ?? voiceSequence;
 
-    const sequenceVarint = encodeVarint(voiceSequence);
+    const sequenceVarint = encodeVarint(currentVoiceSequence);
 
     const voiceHeader = Buffer.alloc(1 + sequenceVarint.length);
     voiceHeader[0] = typeTarget;
@@ -108,7 +112,7 @@ export const createAudioInterface = (socket: TLSSocket) => {
     header.copy(frame, 0);
     packet.copy(frame, header.length);
 
-    voiceSequence++;
+    currentVoiceSequence++;
 
     header.writeUInt16BE(Messages.UDPTunnel, 0);
     header.writeUInt32BE(voiceHeader.length + frame.length, 2);
@@ -116,10 +120,11 @@ export const createAudioInterface = (socket: TLSSocket) => {
     socket.write(voiceHeader);
     socket.write(frame);
 
-    if (voiceSequence > _voiceSequence) {
-      _voiceSequence = voiceSequence;
+    if (currentVoiceSequence > voiceSequence) {
+      voiceSequence = currentVoiceSequence;
     }
 
+    /** Result can be used by dispatch streamer to keep it's own voice sequence state. */
     return 1;
   }
 
