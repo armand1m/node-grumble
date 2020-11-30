@@ -1,52 +1,14 @@
-import tls, { TLSSocket } from 'tls';
-import path from 'path';
+import tls from 'tls';
 import { EventEmitter } from 'events';
-import protobufjs from 'protobufjs';
-import { NodeGrumbleOptions } from './types';
+import {
+  CompleteGrumbleOptions,
+  NodeGrumbleOptions,
+  Events,
+  Messages,
+} from './types';
 import { DefaultOptions } from './defaults';
-
-const protoFilePath = path.join(__dirname, './proto/Mumble.proto');
-
-/**
- * Order matters here.
- * Adapted from https://github.com/Gielert/NoodleJS/blob/master/src/Messages.js
- *
- * From official mumble-protocol documentation:
- * https://mumble-protocol.readthedocs.io/en/latest/protocol_stack_tcp.html
- */
-export enum Messages {
-  Version,
-  UDPTunnel,
-  Authenticate,
-  Ping,
-  Reject,
-  ServerSync,
-  ChannelRemove,
-  ChannelState,
-  UserRemove,
-  UserState,
-  BanList,
-  TextMessage,
-  PermissionDenied,
-  ACL,
-  QueryUsers,
-  CryptSetup,
-  ContextActionModify,
-  ContextAction,
-  UserList,
-  VoiceTarget,
-  PermissionQuery,
-  CodecVersion,
-  UserStats,
-  RequestBlob,
-  ServerConfig,
-  SuggestConfig,
-}
-
-export enum Events {
-  Connected = 'connected',
-  Error = 'error',
-}
+import { Authenticate, Ping, Version } from './generated/Mumble';
+import { createProtobufInterface } from './protobuf';
 
 function encodeVersion(major: number, minor: number, patch: number) {
   return (
@@ -54,43 +16,73 @@ function encodeVersion(major: number, minor: number, patch: number) {
   );
 }
 
-const createConnection = async (options: NodeGrumbleOptions) => {
+export const createConnection = async (
+  options: NodeGrumbleOptions
+) => {
   const eventEmitter = new EventEmitter();
   const protobuf = await createProtobufInterface();
-  const finalOptions = {
+  const finalOptions: CompleteGrumbleOptions = {
     ...DefaultOptions,
     ...options,
   };
+
+  let pingRoutineInterval: NodeJS.Timeout;
+
+  eventEmitter.on(Events.Connected, async () => {
+    const version = Version.encode({
+      version: encodeVersion(0, 0, 0),
+      release: 'node-grumble',
+      os: 'NodeJS',
+      osVersion: process.version,
+    });
+
+    const authenticate = Authenticate.encode({
+      username: finalOptions.name,
+      password: finalOptions.password,
+      opus: true,
+      tokens: finalOptions.tokens,
+      celtVersions: [],
+    });
+
+    await protobuf.writeProto(
+      Messages.Version,
+      version.finish(),
+      socket
+    );
+
+    await protobuf.writeProto(
+      Messages.Authenticate,
+      authenticate.finish(),
+      socket
+    );
+
+    pingRoutineInterval = setInterval(() => {
+      const ping = Ping.fromPartial({
+        timestamp: Date.now(),
+      });
+
+      protobuf.writeProto(
+        Messages.Ping,
+        Ping.encode(ping).finish(),
+        socket
+      );
+    }, 15000);
+  });
 
   const socket = tls.connect(
     finalOptions.port,
     finalOptions.url,
     finalOptions,
-    () => {
+    async () => {
       eventEmitter.emit(Events.Connected);
-      protobuf.writeProto(
-        Messages.Version,
-        {
-          version: encodeVersion(1, 0, 0),
-          release: 'node-grumble client',
-          os: 'NodeJS',
-          os_version: process.version,
-        },
-        socket
-      );
-
-      protobuf.writeProto(
-        Messages.Authenticate,
-        {
-          username: finalOptions.name,
-          password: finalOptions.password,
-          opus: true,
-          tokens: finalOptions.tokens,
-        },
-        socket
-      );
     }
   );
+
+  socket.on('close', () => {
+    if (pingRoutineInterval) {
+      clearInterval(pingRoutineInterval);
+    }
+  });
 
   socket.on('error', (error) => {
     eventEmitter.emit(Events.Error, error);
@@ -100,92 +92,47 @@ const createConnection = async (options: NodeGrumbleOptions) => {
     while (data.length > 6) {
       const typeId = data.readUInt16BE(0);
       const length = data.readUInt32BE(2);
+      const totalLength = length + 6;
 
-      if (data.length < length + 6) {
-        /**
-         * TODO: Check git blame for this
-         */
+      if (data.length < totalLength) {
+        console.warn(
+          `Socket Data should be of length "${totalLength}" but it has "${data.length}"`
+        );
+        console.warn(`Message Type Id: ${typeId}`);
         break;
       }
 
-      const buffer = data.slice(6, length + 6);
+      /**
+       * Extracts the message buffer out of the data stream
+       * and clears out the data stream to make room
+       * for the next message.
+       */
+      const buffer = data.slice(6, totalLength);
       data = data.slice(buffer.length + 6);
 
-      if (Messages.UDPTunnel === typeId) {
+      if (typeId === Messages.UDPTunnel) {
         /**
          * TODO: Setup Opus encoder first then get the readAudio function from here:
          * https://github.com/Gielert/NoodleJS/blob/master/src/Connection.js#L96
          */
         // this.readAudio(data);
-      } else {
-        const { type, message } = protobuf.decodeMessage(
-          typeId,
-          buffer
-        );
-        eventEmitter.emit(type, message);
+        break;
       }
+
+      const { type, message } = protobuf.decodeMessage(
+        typeId,
+        buffer
+      );
+
+      console.log(
+        `received: ${type} ${JSON.stringify(message, null, 2)}`
+      );
+      eventEmitter.emit(type, message);
     }
   });
 
   return {
     socket,
     eventEmitter,
-  };
-};
-
-const createProtobufInterface = async () => {
-  const protobuf = await protobufjs.load(protoFilePath);
-
-  const encodeMessage = (type: string, payload: object) => {
-    const packet = protobuf.lookupType(`MumbleProto.${type}`);
-
-    if (packet.verify(payload)) {
-      throw new Error(`Error verifying payload for packet ${type}`);
-    }
-
-    const message = packet.create(payload);
-    return packet.encode(message).finish();
-  };
-
-  const decodeMessage = (typeId: Messages, buffer: Buffer) => {
-    const type = Messages[typeId];
-    const packet = protobuf.lookupType(`MumbleProto.${type}`);
-    const message = packet.decode(buffer).toJSON();
-    return {
-      type,
-      message,
-    };
-  };
-
-  const writeProto = async (
-    typeId: Messages,
-    payload: object,
-    socket: TLSSocket
-  ) => {
-    const packet = encodeMessage(Messages[typeId], payload);
-
-    const header = Buffer.alloc(6);
-    header.writeUInt16BE(typeId, 0);
-    header.writeUInt32BE(packet.length, 2);
-
-    socket.write(header);
-    socket.write(packet);
-  };
-
-  return {
-    writeProto,
-    encodeMessage,
-    decodeMessage,
-  };
-};
-
-export const createClient = async (options: NodeGrumbleOptions) => {
-  const { eventEmitter, socket } = await createConnection(options);
-
-  return {
-    eventEmitter,
-    end: () => {
-      socket.end();
-    },
   };
 };

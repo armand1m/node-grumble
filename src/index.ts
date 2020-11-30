@@ -1,16 +1,16 @@
-import { createClient, Events } from './client';
+import { Events } from './types';
+import { createConnection } from './client';
 
 const main = async () => {
-  const client = await createClient({
+  const { eventEmitter } = await createConnection({
     url: 'armand1m.dev',
-    port: 64738,
   });
 
-  client.eventEmitter.on(Events.Connected, () => {
+  eventEmitter.on(Events.Connected, () => {
     console.log('Client is connected.');
   });
 
-  client.eventEmitter.on(Events.Error, (error) => {
+  eventEmitter.on(Events.Error, (error) => {
     console.error('Client errored: ', error);
   });
 };

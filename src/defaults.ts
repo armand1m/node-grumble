@@ -1,4 +1,4 @@
-import { NodeGrumbleOptions } from './types';
+import { CompleteGrumbleOptions } from './types';
 
 export const Audio = {
   sampleRate: 48000,
@@ -13,16 +13,7 @@ export const Network = {
   quality: 40000,
 };
 
-/**
- * Options for a client
- * @typedef {Object} ClientOptions
- * @property {string} [url='localhost'] The URL of the Mumble server
- * @property {string} [port='64738'] The port the Mumble server is listening on
- * @property {boolean} [rejectUnauthorized=false] Whether we should reject invalid certificates
- * @property {string} [name='NoodleJS'] The name of the user that will connect
- * @property {string} [password=''] A password when the server has one
- */
-export const DefaultOptions: NodeGrumbleOptions = {
+export const DefaultOptions: CompleteGrumbleOptions = {
   url: 'localhost',
   port: 64738,
   rejectUnauthorized: false,
