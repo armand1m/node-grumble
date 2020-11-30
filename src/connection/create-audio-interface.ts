@@ -1,9 +1,19 @@
-import { Codec, Messages } from './types';
-import { OpusEncoder } from '@discordjs/opus';
-import { Audio } from './defaults';
 import { TLSSocket } from 'tls';
+import { OpusEncoder } from '@discordjs/opus';
+import { Codec, Messages } from '../types';
 
-/** TODO: Consider offloading this to an npm package. */
+const defaultAudioConfig = {
+  sampleRate: 48000,
+  channels: 1,
+  bitDepth: 16,
+  frameSize: 480,
+  frameLength: 10,
+};
+
+/**
+ * TODO: Consider offloading this to an npm package like `varint`,
+ * their implementation is far better than this
+ **/
 function encodeVarint(i: number) {
   const arr = [];
 
@@ -53,17 +63,20 @@ function encodeVarint(i: number) {
 }
 
 export const createAudioInterface = (socket: TLSSocket) => {
-  const opusEncoder = new OpusEncoder(Audio.sampleRate, 1);
+  const opusEncoder = new OpusEncoder(
+    defaultAudioConfig.sampleRate,
+    1
+  );
 
   let _voiceSequence = 0;
 
   function writeAudio(
-    packetParam: Buffer,
+    rawPacket: Buffer,
     whisperTarget?: number,
     initialVoiceSequence?: number,
     isFinal?: boolean
   ) {
-    const packet = opusEncoder.encode(packetParam);
+    const packet = opusEncoder.encode(rawPacket);
 
     const target = whisperTarget || 0;
     const typeTarget = (Codec.Opus << 5) | target;

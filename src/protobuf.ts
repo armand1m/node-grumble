@@ -1,14 +1,41 @@
 import { TLSSocket } from 'tls';
 import path from 'path';
 import protobufjs from 'protobufjs';
-import { Messages } from './types';
+import { Messages, MessageType, Packet } from './types';
 
 const protoFilePath = path.join(__dirname, './proto/Mumble.proto');
 
-export const createProtobufInterface = async () => {
+export const encodeVersion = (
+  major: number,
+  minor: number,
+  patch: number
+) => {
+  return (
+    ((major & 0xffff) << 16) | ((minor & 0xff) << 8) | (patch & 0xff)
+  );
+};
+
+export const writePacketToSocket = (
+  messageTypeId: Messages,
+  packet: Uint8Array,
+  socket: TLSSocket
+) => {
+  const header = Buffer.alloc(6);
+  header.writeUInt16BE(messageTypeId, 0);
+  header.writeUInt32BE(packet.length, 2);
+
+  socket.write(header);
+  socket.write(packet);
+};
+
+export const createMumbleProtobufDecoder = async () => {
   const protobuf = await protobufjs.load(protoFilePath);
 
-  const encodeMessage = (type: string, payload: object) => {
+  /**
+   * TODO: Consider removing encodeMessage as it is not being used.
+   * Try to find a way to use the generated libraries instead of this, since they do the encoding.
+   */
+  const encodeMessage = (type: MessageType, payload: object) => {
     const packet = protobuf.lookupType(`MumbleProto.${type}`);
 
     if (packet.verify(payload)) {
@@ -20,30 +47,16 @@ export const createProtobufInterface = async () => {
   };
 
   const decodeMessage = (typeId: Messages, buffer: Buffer) => {
-    const type = Messages[typeId];
+    const type = Messages[typeId] as MessageType;
     const packet = protobuf.lookupType(`MumbleProto.${type}`);
     const message = packet.decode(buffer).toJSON();
     return {
       type,
       message,
-    };
-  };
-
-  const writeProto = async (
-    messageTypeId: Messages,
-    packet: Uint8Array,
-    socket: TLSSocket
-  ) => {
-    const header = Buffer.alloc(6);
-    header.writeUInt16BE(messageTypeId, 0);
-    header.writeUInt32BE(packet.length, 2);
-
-    socket.write(header);
-    socket.write(packet);
+    } as Packet;
   };
 
   return {
-    writeProto,
     encodeMessage,
     decodeMessage,
   };

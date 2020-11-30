@@ -1,3 +1,34 @@
+import { EventEmitter } from 'events';
+import { Writer } from 'protobufjs';
+
+export type MessageType =
+  | 'Version'
+  | 'UDPTunnel'
+  | 'Authenticate'
+  | 'Ping'
+  | 'Reject'
+  | 'ServerSync'
+  | 'ChannelRemove'
+  | 'ChannelState'
+  | 'UserRemove'
+  | 'UserState'
+  | 'BanList'
+  | 'TextMessage'
+  | 'PermissionDenied'
+  | 'ACL'
+  | 'QueryUsers'
+  | 'CryptSetup'
+  | 'ContextActionModify'
+  | 'ContextAction'
+  | 'UserList'
+  | 'VoiceTarget'
+  | 'PermissionQuery'
+  | 'CodecVersion'
+  | 'UserStats'
+  | 'RequestBlob'
+  | 'ServerConfig'
+  | 'SuggestConfig';
+
 /**
  * Order matters here.
  * Adapted from https://github.com/Gielert/NoodleJS/blob/master/src/Messages.js
@@ -34,6 +65,12 @@ export enum Messages {
   SuggestConfig,
 }
 
+/**
+ * Order matters here.
+ *
+ * From official mumble-protocol documentation, check "Packet format -> type":
+ * https://mumble-protocol.readthedocs.io/en/latest/voice_data.html
+ */
 export enum Codec {
   Celt,
   Ping,
@@ -45,6 +82,8 @@ export enum Codec {
 export enum Events {
   Connected = 'connected',
   Error = 'error',
+  Close = 'close',
+  Packet = 'packet',
 }
 
 export interface NodeGrumbleOptions {
@@ -63,4 +102,15 @@ export interface CompleteGrumbleOptions {
   name: string;
   password: string;
   tokens: any[];
+}
+
+export interface Connection {
+  write: (type: Messages, writer: Writer) => void;
+  events: EventEmitter;
+  disconnect: () => void;
+}
+
+export interface Packet {
+  type: MessageType;
+  message: Record<string, any>;
 }
