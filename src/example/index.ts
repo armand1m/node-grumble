@@ -1,11 +1,9 @@
 import { NodeGrumble, Events, MessageType } from '../';
 
 const main = async () => {
-  const grumble = NodeGrumble.create({
-    url: 'intruder.network',
+  const connection = await NodeGrumble.connect({
+    url: 'armand1m.dev',
   });
-
-  const connection = await grumble.connect();
 
   connection.on(Events.Connected, () => {
     console.log('Client is connected.');

@@ -19,6 +19,42 @@ This package is a total rewrite from the NoodleJS library with a few enhancement
     - [x] Send text to a Channel
     - [ ] Send text to a User
  - Voice Features
-    - [ ] Process voice
-    - [x] Play audio
-    - [ ] Control volume
+    - [x] Play audio file
+    - [x] Volume control
+    - [ ] Process incoming voice
+
+## Usage
+
+```sh
+yarn add node-grumble
+```
+
+```ts
+import { NodeGrumble, Events, MessageType } from 'node-grumble';
+
+const connection = await NodeGrumble.connect({
+  url: 'mumble-server.endpoint.dev',
+});
+
+connection.on(Events.Connected, () => {
+  console.log('Client is connected. Triggering text and audio.');
+  connection.sendTextMessage('Hi! I am logged in.');
+  connection.playFile('./some-audio-file.mp3', 0.5);
+});
+
+connection.on(Events.Error, (error) => {
+  console.error('Client errored:', error);
+});
+
+connection.on(Events.Packet, (packet) => {
+  console.log(packet);
+});
+
+connection.on(MessageType.UserState, (userState) => {
+  console.log(`UserState packet received: ${userState.name}`);
+});
+
+connection.on(Events.Close, () => {
+  console.log('Connection got closed.');
+});
+```

@@ -4,4 +4,5 @@ export const defaultAudioConfig = {
   bitDepth: 16,
   frameSize: 480,
   frameLength: 10,
+  format: 's16le',
 };

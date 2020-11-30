@@ -3,7 +3,16 @@ import { Writable as WritableStream } from 'stream';
 import { defaultAudioConfig } from './audio-configuration';
 import { Connection } from './create-connection';
 
+const createFrameBuffer = () => {
+  return Buffer.alloc(defaultAudioConfig.frameSize * 2);
+};
+
 /**
+ * AudioDispatcher is a Writable Stream with some
+ * additional behavior to interact with the connection.
+ *
+ * Writing in the AudioDispatcher writes directly into the connection socket.
+ *
  * TODO: Cleanup this class.
  */
 export class AudioDispatcher extends WritableStream {
@@ -13,7 +22,6 @@ export class AudioDispatcher extends WritableStream {
   private frameQueue: Buffer[];
   private lastFrame: Buffer;
   private whisperId: number;
-  private _volume: number;
   private lastFrameWritten: number;
   private lastWrite: any;
   private voiceSequence: number;
@@ -23,55 +31,33 @@ export class AudioDispatcher extends WritableStream {
     this.connection = connection;
     this.processObserver = new EventEmitter();
 
-    this.open();
-
-    this.frameQueue = [];
-    this.lastFrame = this._createFrameBuffer();
-
-    this.whisperId = voiceTarget;
-
-    this._volume = 1;
-    this.lastFrameWritten = 0;
-    this.lastWrite = null;
-
-    this.voiceSequence = 0;
-  }
-
-  open() {
-    if (this.processInterval) return;
     this.processInterval = setInterval(
       this._processAudioBuffer.bind(this),
       defaultAudioConfig.frameLength
     );
-  }
 
-  close() {
-    if (this.processInterval) clearInterval(this.processInterval);
-    this.processInterval = null;
     this.frameQueue = [];
-    this.lastFrame = this._createFrameBuffer();
+    this.lastFrame = createFrameBuffer();
+
+    this.whisperId = voiceTarget;
+
     this.lastFrameWritten = 0;
     this.lastWrite = null;
+
     this.voiceSequence = 0;
   }
 
-  set volume(volume) {
-    this._volume = volume;
-  }
-
-  get volume() {
-    return this._volume;
-  }
-
-  applyFrameVolume(frame: Buffer, gain: number) {
-    for (var i = 0; i < frame.length; i += 2) {
-      frame.writeInt16LE(Math.floor(frame.readInt16LE(i) * gain), i);
+  close() {
+    if (this.processInterval) {
+      clearInterval(this.processInterval);
     }
-    return frame;
-  }
 
-  _createFrameBuffer() {
-    return Buffer.alloc(defaultAudioConfig.frameSize * 2);
+    this.processInterval = null;
+    this.frameQueue = [];
+    this.lastFrame = createFrameBuffer();
+    this.lastFrameWritten = 0;
+    this.lastWrite = null;
+    this.voiceSequence = 0;
   }
 
   _processAudioBuffer() {
@@ -89,31 +75,18 @@ export class AudioDispatcher extends WritableStream {
       Date.now()
     ) {
       if (this.frameQueue.length > 0) {
-        let frame = this.frameQueue.shift();
+        const frame = this.frameQueue.shift();
 
         if (!frame) {
           break;
         }
 
-        if (this._volume !== 1) {
-          frame = this.applyFrameVolume(frame, this._volume);
-        }
-
-        if (this.frameQueue.length < 1) {
-          this.voiceSequence += this.connection.writeAudio(
-            frame,
-            this.whisperId,
-            this.voiceSequence,
-            true
-          );
-        } else {
-          this.voiceSequence += this.connection.writeAudio(
-            frame,
-            this.whisperId,
-            this.voiceSequence,
-            false
-          );
-        }
+        this.voiceSequence += this.connection.writeAudio(
+          frame,
+          this.whisperId,
+          this.voiceSequence,
+          this.frameQueue.length < 1
+        );
 
         this.processObserver.emit('written');
       }
@@ -124,6 +97,9 @@ export class AudioDispatcher extends WritableStream {
     return;
   }
 
+  /**
+   * This is an override on the stream.Writable class.
+   */
   _write(chunk: Buffer, encoding: BufferEncoding, cb: () => void) {
     while (true) {
       if (this.frameQueue.length >= defaultAudioConfig.frameLength) {
@@ -140,7 +116,7 @@ export class AudioDispatcher extends WritableStream {
       if (written >= this.lastFrame.length) {
         written = this.lastFrame.length;
         this.frameQueue.push(this.lastFrame);
-        this.lastFrame = this._createFrameBuffer();
+        this.lastFrame = createFrameBuffer();
         this.lastFrameWritten = 0;
       } else {
         this.lastFrameWritten = written;
