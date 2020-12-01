@@ -20,7 +20,7 @@ describe('node-grumble client integration tests', () => {
 
     connection.on(Events.Connected, () => {
       console.log('Client is connected. Triggering text and audio.');
-      connection.sendTextMessage('oi guilerme tudo bem');
+      connection.sendTextMessage('message-test');
       connection.playFile(testAudioPath, 0.2);
 
       setTimeout(() => {

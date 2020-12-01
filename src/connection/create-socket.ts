@@ -41,7 +41,7 @@ export const createSocket = async (
      * Data Ingestion Loop.
      *
      * Keeps reading data from the socket and emitting events
-     * as they're processed and decoded.
+     * as they're decoded.
      *
      * The `data` buffer is constantly mutated from the Mumble Server,
      * and from this event handler as it cleans the data buffer.
@@ -72,7 +72,9 @@ export const createSocket = async (
         }
 
         /**
-         * TODO: Adapt the readAudio function from here:
+         * TODO: Implement audio processing.
+         *
+         * Implementation in NoodleJS:
          * https://github.com/Gielert/NoodleJS/blob/master/src/Connection.js#L96
          */
         // readAudio(data);
