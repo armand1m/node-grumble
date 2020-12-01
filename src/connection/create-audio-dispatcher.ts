@@ -13,7 +13,8 @@ const createFrameBuffer = () => {
  *
  * Writing in the AudioDispatcher writes directly into the connection socket.
  *
- * TODO: Cleanup this class.
+ * TODO: Cleanup this class a bit more. A lot of cleanup
+ * was already made but there is still some room for improvement.
  */
 export class AudioDispatcher extends WritableStream {
   private connection: Connection;
@@ -23,7 +24,7 @@ export class AudioDispatcher extends WritableStream {
   private lastFrame: Buffer;
   private whisperId: number;
   private lastFrameWritten: number;
-  private lastWrite: any;
+  private lastWrite: number | null;
   private voiceSequence: number;
 
   constructor(connection: Connection, voiceTarget: number) {
