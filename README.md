@@ -5,7 +5,9 @@ The name is inspired by the Mumble Server implementation in Go called [Grumble](
 
 This package is a rewrite from scratch and some refactors from code copied from the NoodleJS package, which was also an inspiration for this project.
 
-It is currently being developed, so many features are still missing and the API might change a lot. Expect breaking changes.
+It is currently being developed, so many features are still missing and the API might change a lot.
+
+This library is still new and there are a lot of unstabilities.
 
 ## Features
 
@@ -25,8 +27,9 @@ It is currently being developed, so many features are still missing and the API 
  - Text Features
     - [x] Send text to a Channel
     - [ ] Send text to a User
- - Voice Features
+ - Voice Features [UNSTABLE]
     - [x] Play audio file
+      - Currently failing on specific situations. I'm currently exploring this.
     - [x] Volume control
     - [ ] Process incoming voice
     - [ ] Real time list of speaking users
