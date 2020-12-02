@@ -21,6 +21,8 @@ jobs:
       - name: Lint
         run: yarn lint
       - name: Test
+        env:
+          MUMBLE_SERVER_URL: armand1m.dev
         run: yarn test:coverage
       - name: Build
         run: yarn build
