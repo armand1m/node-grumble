@@ -5,7 +5,7 @@ The name is inspired by the Mumble Server implementation in Go called [Grumble](
 
 This package is a rewrite from scratch and some refactors from code copied from the NoodleJS package, which was also an inspiration for this project.
 
-It is currently being developed, so many features are still missing and the API might change a lot. Expect breaking changes if using lower than 1.0.0
+It is currently being developed, so many features are still missing and the API might change a lot. Expect breaking changes.
 
 ## Features
 
