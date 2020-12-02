@@ -10,8 +10,8 @@ It is currently being developed, so many features are still missing and the API 
 ## Features
 
  - [x] Type-safe Event Driven Programming
-    - [x] Typed Connection, Close and Error events
-    - [x] Typed protobuf events
+    - [x] Typed Connection, Close and Error events from Socket
+    - [x] Typed protobuf events from Mumble Server
  - User Features
     - [ ] Change name
  - Channel Features
