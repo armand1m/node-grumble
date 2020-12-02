@@ -29,7 +29,6 @@ export const createAudioInterface = (socket: TLSSocket) => {
     const typeTarget = (Codec.Opus << 5) | target;
 
     const sequence = Varint.encode(initialVoiceSequence);
-
     const voiceHeader = Buffer.alloc(1 + sequence.length);
     voiceHeader[0] = typeTarget;
     sequence.copy(voiceHeader, 1, 0);
@@ -39,7 +38,6 @@ export const createAudioInterface = (socket: TLSSocket) => {
       : encodedBuffer.length;
 
     const header = Varint.encode(bufferLength);
-
     const frame = Buffer.alloc(header.length + encodedBuffer.length);
     header.copy(frame, 0);
     encodedBuffer.copy(frame, header.length);
@@ -48,6 +46,7 @@ export const createAudioInterface = (socket: TLSSocket) => {
       Messages.UDPTunnel,
       voiceHeader.length + frame.length
     );
+
     socket.write(packetHeader);
     socket.write(voiceHeader);
     socket.write(frame);

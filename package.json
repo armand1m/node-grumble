@@ -41,7 +41,9 @@
     "tslib": "^2.0.3"
   },
   "scripts": {
+    "prebuild": "rm -rf ./build",
     "build": "tsc",
+    "postbuild": "cp ./src/proto/Mumble.proto ./build/proto",
     "lint": "prettier --check './src/**/*.{tsx,ts}'",
     "lint:fix": "prettier --write './src/**/*.{tsx,ts}'",
     "test": "jest",
