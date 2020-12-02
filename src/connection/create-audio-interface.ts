@@ -11,6 +11,14 @@ export const createAudioInterface = (socket: TLSSocket) => {
     defaultAudioConfig.channels
   );
 
+  const setBitrate = (bitrate: number) => {
+    /**
+     * Remove ts ignore once https://github.com/discordjs/opus/pull/48 gets merged.
+     */
+    // @ts-ignore
+    opusEncoder.setBitrate(bitrate);
+  };
+
   function writeAudio(
     buffer: Buffer,
     whisperTarget?: number,
@@ -56,6 +64,7 @@ export const createAudioInterface = (socket: TLSSocket) => {
   }
 
   return {
+    setBitrate,
     writeAudio,
   };
 };

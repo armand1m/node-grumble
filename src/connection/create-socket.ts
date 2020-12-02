@@ -93,7 +93,7 @@ export const createSocket = (
 
   const disconnect = () => socket.end();
 
-  const { writeAudio } = createAudioInterface(socket);
+  const { setBitrate, writeAudio } = createAudioInterface(socket);
 
-  return { events, write, disconnect, writeAudio };
+  return { events, write, disconnect, writeAudio, setBitrate };
 };
