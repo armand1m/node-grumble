@@ -49,7 +49,8 @@ connection.on(Events.Error, (error) => {
 });
 
 connection.on(Events.Packet, (packet) => {
-  console.log(packet);
+  console.log(packet.type);
+  console.log(packet.message);
 });
 
 connection.on(MessageType.UserState, (userState) => {
