@@ -40,6 +40,19 @@ This library is still new and there are a lot of unstabilities.
 yarn add node-grumble
 ```
 
+- Javascript example:
+
+```js
+const { NodeGrumble } = require('node-grumble');
+const connection = await NodeGrumble.connect({
+    url: "mumble-server.dev",
+    name: "My Bot"
+});
+connection.playFile("./data/audio/some-audio-file.mp3", 1);
+```
+
+- Typescript example:
+
 ```ts
 import { NodeGrumble, Events, MessageType } from 'node-grumble';
 

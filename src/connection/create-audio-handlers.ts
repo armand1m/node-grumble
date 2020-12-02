@@ -9,18 +9,15 @@ export const createAudioHandlers = (connection: Connection) => {
     volume: number = 1,
     channelId: number = 0
   ) => {
-    const dispatcher = new AudioDispatcher(connection, channelId);
-
     return new Promise<void>((resolve, reject) => {
+      const dispatcher = new AudioDispatcher(connection, channelId);
+      dispatcher.once('finish', resolve);
+
       ffmpeg(filename)
         .output(dispatcher)
         .audioFilters(`volume=${volume}`)
         .audioFrequency(defaultAudioConfig.sampleRate)
         .audioChannels(defaultAudioConfig.channels)
-        .on('end', () => {
-          dispatcher.close();
-          resolve();
-        })
         .on('error', reject)
         .format(defaultAudioConfig.format)
         .run();
