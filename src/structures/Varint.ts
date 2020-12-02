@@ -8,7 +8,7 @@
 export function encode(i: number) {
   const arr = [];
 
-  if (i & 0x8000000000000000 && ~i < 0x100000000) {
+  if (i < 0) {
     i = ~i;
 
     if (i <= 0x3) {
