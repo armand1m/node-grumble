@@ -18,8 +18,8 @@ jobs:
           node-version: 12
       - name: Install system dependencies
         run: >
-          apt update \
-          && apt install ffmpeg \
+          apt update
+          && apt install ffmpeg
           && ffmpeg -version
       - name: Install dependencies
         run: yarn
