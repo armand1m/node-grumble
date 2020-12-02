@@ -41,13 +41,7 @@ yarn add mumbo
 import { NodeGrumble, Events, MessageType } from 'node-grumble';
 
 const connection = await NodeGrumble.connect({
-  url: 'mumble-server.endpoint.dev',
-});
-
-connection.on(Events.Connected, () => {
-  console.log('Client is connected. Triggering text and audio.');
-  connection.sendTextMessage('Hi! I am logged in.');
-  connection.playFile('./some-audio-file.mp3', 0.5);
+  url: String(process.env.MUMBLE_SERVER_URL),
 });
 
 connection.on(Events.Error, (error) => {
@@ -65,6 +59,15 @@ connection.on(MessageType.UserState, (userState) => {
 connection.on(Events.Close, () => {
   console.log('Connection got closed.');
 });
+
+connection.sendTextMessage('Hey you.');
+
+await connection.playFile(testAudioPath, 0.2);
+await connection.playFile(testAudioPath, 0.4);
+await connection.playFile(testAudioPath, 0.6);
+await connection.playFile(testAudioPath);
+
+connection.disconnect();
 ```
 
 ## Why?
