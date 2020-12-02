@@ -11,7 +11,10 @@ export const createAudioHandlers = (connection: Connection) => {
   ) => {
     return new Promise<void>((resolve, reject) => {
       const dispatcher = new AudioDispatcher(connection, channelId);
-      dispatcher.once('finish', resolve);
+      dispatcher.once('finish', () => {
+        dispatcher.close();
+        resolve();
+      });
 
       ffmpeg(filename)
         .output(dispatcher)
