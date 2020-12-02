@@ -55,8 +55,8 @@ export const NodeGrumble = {
        * Plays a file in the current channel.
        * Volume can be controlled with float numbers between 0 and 1.
        */
-      playFile: (filename: string, volume: number = 1) => {
-        audioHandlers.playFile(filename, volume);
+      playFile: (filename: string, volume?: number) => {
+        return audioHandlers.playFile(filename, volume);
       },
     };
 

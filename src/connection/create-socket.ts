@@ -14,7 +14,7 @@ import {
 import { TypedEventEmitter } from '../structures/EventEmitter';
 import { createAudioInterface } from './create-audio-interface';
 
-export const createSocket = async (
+export const createSocket = (
   finalOptions: CompleteGrumbleOptions
 ) => {
   const events = new TypedEventEmitter<MessageEventMap & EventMap>();

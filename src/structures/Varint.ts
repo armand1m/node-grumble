@@ -12,10 +12,7 @@ export function encode(i: number) {
     i = ~i;
 
     if (i <= 0x3) {
-      return {
-        value: Buffer.from([0xfc | i]),
-        length: 1,
-      };
+      return Buffer.from([0xfc | i]);
     }
 
     arr.push(0xf8);
@@ -59,8 +56,5 @@ export function encode(i: number) {
     arr.push(i & 0xff);
   }
 
-  return {
-    value: Buffer.from(arr),
-    length: arr.length,
-  };
+  return Buffer.from(arr);
 }

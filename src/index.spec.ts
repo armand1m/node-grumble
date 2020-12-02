@@ -15,25 +15,7 @@ describe('node-grumble client integration tests', () => {
     jest.setTimeout(30000);
 
     const connection = await NodeGrumble.connect({
-      url: 'armand1m.dev',
-    });
-
-    connection.on(Events.Connected, () => {
-      console.log('Client is connected. Triggering text and audio.');
-      connection.sendTextMessage('message-test');
-      connection.playFile(testAudioPath, 0.2);
-
-      setTimeout(() => {
-        connection.playFile(testAudioPath, 0.4);
-      }, 3000);
-
-      setTimeout(() => {
-        connection.playFile(testAudioPath, 0.6);
-      }, 6000);
-
-      setTimeout(() => {
-        connection.playFile(testAudioPath);
-      }, 9000);
+      url: String(process.env.MUMBLE_SERVER_URL),
     });
 
     connection.on(Events.Error, (error) => {
@@ -53,16 +35,23 @@ describe('node-grumble client integration tests', () => {
       done();
     });
 
+    connection.sendTextMessage('message-test');
+
+    await connection.playFile(testAudioPath, 0.2);
+    await connection.playFile(testAudioPath, 0.4);
+    await connection.playFile(testAudioPath, 0.6);
+    await connection.playFile(testAudioPath);
+
     setTimeout(() => {
       connection.disconnect();
-    }, 20000);
+    }, 2000);
   });
 
-  // it('should fail to connect', () => {
-  //   expect(() => {
-  //     return NodeGrumble.create({
-  //       url: 'nonexistant.server',
-  //     }).connect();
-  //   }).rejects.toThrow();
-  // });
+  it('should fail to connect', async () => {
+    expect.assertions(1);
+
+    await expect(
+      NodeGrumble.connect({ url: 'nonexistant.server' })
+    ).rejects.toThrowErrorMatchingSnapshot();
+  });
 });

@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`node-grumble client integration tests should fail to connect 1`] = `"getaddrinfo ENOTFOUND nonexistant.server"`;

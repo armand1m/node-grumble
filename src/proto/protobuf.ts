@@ -20,12 +20,18 @@ export const writePacketToSocket = (
   packet: Uint8Array,
   socket: TLSSocket
 ) => {
+  socket.write(createPacketHeader(messageTypeId, packet.length));
+  socket.write(packet);
+};
+
+export const createPacketHeader = (
+  messageTypeId: Messages,
+  packetLength: number
+) => {
   const header = Buffer.alloc(6);
   header.writeUInt16BE(messageTypeId, 0);
-  header.writeUInt32BE(packet.length, 2);
-
-  socket.write(header);
-  socket.write(packet);
+  header.writeUInt32BE(packetLength, 2);
+  return header;
 };
 
 export const createMumbleProtobufDecoder = async () => {

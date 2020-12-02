@@ -17,35 +17,30 @@ const createFrameBuffer = () => {
  * was already made but there is still some room for improvement.
  */
 export class AudioDispatcher extends WritableStream {
+  private whisperId: number;
   private connection: Connection;
   private processObserver: EventEmitter;
   private processInterval: NodeJS.Timeout | undefined | null;
   private frameQueue: Buffer[];
+  private lastWrite: number;
   private lastFrame: Buffer;
-  private whisperId: number;
   private lastFrameWritten: number;
-  private lastWrite: number | null;
   private voiceSequence: number;
 
   constructor(connection: Connection, voiceTarget: number) {
     super();
+    this.whisperId = voiceTarget;
     this.connection = connection;
     this.processObserver = new EventEmitter();
-
+    this.frameQueue = [];
+    this.lastWrite = Date.now();
+    this.lastFrame = createFrameBuffer();
+    this.lastFrameWritten = 0;
+    this.voiceSequence = 0;
     this.processInterval = setInterval(
       this._processAudioBuffer.bind(this),
       defaultAudioConfig.frameLength
     );
-
-    this.frameQueue = [];
-    this.lastFrame = createFrameBuffer();
-
-    this.whisperId = voiceTarget;
-
-    this.lastFrameWritten = 0;
-    this.lastWrite = null;
-
-    this.voiceSequence = 0;
   }
 
   close() {
@@ -57,20 +52,10 @@ export class AudioDispatcher extends WritableStream {
     this.frameQueue = [];
     this.lastFrame = createFrameBuffer();
     this.lastFrameWritten = 0;
-    this.lastWrite = null;
     this.voiceSequence = 0;
   }
 
   _processAudioBuffer() {
-    if (
-      !this.lastWrite ||
-      this.lastWrite + 20 * defaultAudioConfig.frameLength <
-        Date.now()
-    ) {
-      this.lastWrite = Date.now();
-      return;
-    }
-
     while (
       this.lastWrite + defaultAudioConfig.frameLength <
       Date.now()
@@ -94,8 +79,6 @@ export class AudioDispatcher extends WritableStream {
 
       this.lastWrite += defaultAudioConfig.frameLength;
     }
-
-    return;
   }
 
   /**

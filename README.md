@@ -78,14 +78,14 @@ We used the NoodleJS library before, but we've got used to write Typescript appl
 There are some `// @ts-ignore`'s around our bot servers together with some code that can potentially fail.
 
 I thought about contributing back to NoodleJS, but a complete typescript rewrite sounded like too much for a first contribution for me.
-I also don't trust that much packages that offer type definitions but are written in JS, as the type definitions often mismatch the actual implementation, requiring to use things such as `tsd` to make sure it is correct. Some things in NoodleJS also are not working properly.
+I also don't trust that much packages that offer type definitions but are written in JS, as the type definitions often mismatch the actual implementation, requiring to use things such as `tsd` to make sure it is correct.The volume controls when playing audio with NoodleJS didn't seem to work (at the time of this writing).
 
-I've also always wanted to learn a bit more about protobuf's and code managing audio.
-`node-grumble` is my attempt on learning a bit more about the above, while also bringing a better development experience for me and my friends.
+Besides all of that, I wanted to learn a bit more about the UDP protocol, Protocol Buffers and Audio Streaming. Unfortunately, my work rarely exposes me to this type of challenges.
+`node-grumble` is my attempt on learning a bit more about the above, while also bringing a better development experience for me and my friends while we use Mumble.
 
 ## Credits
 
 - All the NoodleJS developers, it wouldn't happen without much of the code I ~~stole~~ borrowed from them.
 - Rafael Martins, for bootstraping one of the bots that motivated me to end up writing this.
-- Guilherme Lima, for accepting me breaking his murmur instance with this and for exposing me to Mumble.
+- [Guilherme Lima](https://github.com/guilhermelimak), for accepting me breaking his murmur instance with this and for exposing me to Mumble.
 - Armando Magalhaes (me), for spending my time writing and testing all of this.

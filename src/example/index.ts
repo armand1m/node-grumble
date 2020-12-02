@@ -2,7 +2,7 @@ import { NodeGrumble, Events, MessageType } from '../';
 
 const main = async () => {
   const connection = await NodeGrumble.connect({
-    url: 'armand1m.dev',
+    url: String(process.env.MUMBLE_SERVER_URL),
   });
 
   connection.on(Events.Connected, () => {
