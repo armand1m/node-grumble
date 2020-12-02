@@ -50,7 +50,10 @@
     "dev": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec 'ts-node' src/index.ts",
     "generate:proto": "protoc --plugin=node_modules/ts-proto/protoc-gen-ts_proto --ts_proto_out=./src/generated ./src/proto/Mumble.proto",
     "start:example": "ts-node ./src/example",
-    "pack:inspect": "newt exec yarn pack && tar -ztvf *.tgz",
+    "pack:inspect": "yarn pack && tar -ztvf *.tgz",
     "semantic-release": "semantic-release"
+  },
+  "release": {
+    "branches": ["main"]
   }
 }
