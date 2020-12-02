@@ -34,7 +34,7 @@ It is currently being developed, so many features are still missing and the API 
 ## Usage
 
 ```sh
-yarn add mumbo
+yarn add node-grumble
 ```
 
 ```ts
