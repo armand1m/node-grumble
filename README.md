@@ -44,12 +44,37 @@ yarn add node-grumble
 - Javascript example:
 
 ```js
-const { NodeGrumble } = require('node-grumble');
-const connection = await NodeGrumble.connect({
-    url: "mumble-server.dev",
-    name: "My Bot"
+const { NodeGrumble, Events } = require('node-grumble');
+
+const grumble = NodeGrumble.create({
+  url: String(process.env.MUMBLE_SERVER_URL),
+  name: String(process.env.MUMBLE_CLIENT_NAME),
 });
-connection.playFile("./data/audio/some-audio-file.mp3", 1);
+
+grumble.on(Events.Error, (error) => {
+  console.error('Client errored:', error);
+});
+
+grumble.on(Events.Packet, (packet) => {
+  console.log(packet.type);
+  console.log(packet.message);
+});
+
+grumble.on(MessageType.UserState, (userState) => {
+  console.log(`UserState packet received: ${userState.name}`);
+});
+
+grumble.on(Events.Close, () => {
+  console.log('Connection got closed.');
+});
+
+const connection = await grumble.connect();
+
+connection.sendTextMessage('Hey you.');
+
+await connection.playFile('./audio/your-favorite-2020-audio.mp3', 0.8);
+
+connection.disconnect();
 ```
 
 - Typescript example:
@@ -59,6 +84,7 @@ import { NodeGrumble, Events, MessageType } from 'node-grumble';
 
 const grumble = NodeGrumble.create({
   url: String(process.env.MUMBLE_SERVER_URL),
+  name: String(process.env.MUMBLE_CLIENT_NAME),
 });
 
 grumble.on(Events.Error, (error) => {
