@@ -5,17 +5,16 @@ The name is inspired by the Mumble Server implementation in Go called [Grumble](
 
 This package is a rewrite from scratch and some refactors from code copied from the NoodleJS package, which was also an inspiration for this project.
 
-It is currently being developed, so many features are still missing and the API might change a lot.
-
-This library is still new and there are a lot of unstabilities.
+This library is still new and there are a lot of unstabilities. Expect Breaking Changes.
 
 ## Features
 
+ - [ ] Documentation
  - [x] Type-safe Event Driven Programming
     - [x] Typed Connection, Close and Error events from Socket
     - [x] Typed protobuf events from Mumble Server
- - User Features
-    - [ ] Change name
+    - [x] Promises for wrapping connection state
+    - [ ] Observables to watch changes in server state
  - Channel Features
     - [ ] Set Channel
     - [ ] Listen multiple channels
@@ -23,16 +22,18 @@ This library is still new and there are a lot of unstabilities.
  - User Features
     - [ ] List users in the server
     - [ ] List users in a channel
-    - [ ] Observe user changes
+    - [ ] Observe changes in users states
  - Text Features
     - [x] Send text to a Channel
     - [ ] Send text to a User
- - Voice Features [UNSTABLE]
+ - Voice Features
     - [x] Play audio file
-      - Currently failing on specific situations. I'm currently exploring this.
     - [x] Volume control
+    - [x] Opus Support Only
+    - [x] Bitrate optimization
+    - [ ] Mute / Unmute
     - [ ] Process incoming voice
-    - [ ] Real time list of speaking users
+    - [ ] Real-time list of speaking users as Observable
 
 ## Usage
 
@@ -56,36 +57,37 @@ connection.playFile("./data/audio/some-audio-file.mp3", 1);
 ```ts
 import { NodeGrumble, Events, MessageType } from 'node-grumble';
 
-const connection = await NodeGrumble.connect({
+const grumble = NodeGrumble.create({
   url: String(process.env.MUMBLE_SERVER_URL),
 });
 
-connection.on(Events.Error, (error) => {
+grumble.on(Events.Error, (error) => {
   console.error('Client errored:', error);
 });
 
-connection.on(Events.Packet, (packet) => {
+grumble.on(Events.Packet, (packet) => {
   console.log(packet.type);
   console.log(packet.message);
 });
 
-connection.on(MessageType.UserState, (userState) => {
+grumble.on(MessageType.UserState, (userState) => {
   console.log(`UserState packet received: ${userState.name}`);
 });
 
-connection.on(Events.Close, () => {
+grumble.on(Events.Close, () => {
   console.log('Connection got closed.');
 });
 
+const connection = await grumble.connect();
+
 connection.sendTextMessage('Hey you.');
 
-await connection.playFile(testAudioPath, 0.2);
-await connection.playFile(testAudioPath, 0.4);
-await connection.playFile(testAudioPath, 0.6);
-await connection.playFile(testAudioPath);
+await connection.playFile('./audio/your-favorite-2020-audio.mp3', 0.8);
 
 connection.disconnect();
 ```
+
+Also check `src/example` for another Typescript example.
 
 ## Why?
 
