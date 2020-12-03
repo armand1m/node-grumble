@@ -15,10 +15,9 @@ import { TypedEventEmitter } from '../structures/EventEmitter';
 import { createAudioInterface } from './create-audio-interface';
 
 export const createSocket = (
-  finalOptions: CompleteGrumbleOptions
+  finalOptions: CompleteGrumbleOptions,
+  events: TypedEventEmitter<MessageEventMap & EventMap>
 ) => {
-  const events = new TypedEventEmitter<MessageEventMap & EventMap>();
-
   const socket = tls.connect(
     finalOptions.port,
     finalOptions.url,
@@ -95,5 +94,12 @@ export const createSocket = (
 
   const { setBitrate, writeAudio } = createAudioInterface(socket);
 
-  return { events, write, disconnect, writeAudio, setBitrate };
+  return {
+    socket,
+    events,
+    write,
+    disconnect,
+    writeAudio,
+    setBitrate,
+  };
 };

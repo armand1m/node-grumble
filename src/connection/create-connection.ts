@@ -5,10 +5,13 @@ import {
   Messages,
   UnwrapPromise,
   MessageType,
+  MessageEventMap,
+  EventMap,
 } from '../types';
 import { Authenticate, Ping, Version } from '../proto/Mumble';
 import { encodeVersion } from '../proto/protobuf';
 import { createSocket } from './create-socket';
+import { TypedEventEmitter } from '../structures/EventEmitter';
 
 const defaultOptions: CompleteGrumbleOptions = {
   url: 'localhost',
@@ -60,7 +63,8 @@ type ConnectionHandlers = Pick<
 >;
 
 export const createConnection = async (
-  options: NodeGrumbleOptions
+  options: NodeGrumbleOptions,
+  events: TypedEventEmitter<MessageEventMap & EventMap>
 ) => {
   return new Promise<ConnectionHandlers>((resolve, reject) => {
     const completeOptions: CompleteGrumbleOptions = {
@@ -69,12 +73,12 @@ export const createConnection = async (
     };
 
     const {
-      events,
+      socket,
       write,
       writeAudio,
       setBitrate,
       disconnect,
-    } = createSocket(completeOptions);
+    } = createSocket(completeOptions, events);
 
     let pingInterval: NodeJS.Timeout | undefined;
 
@@ -97,22 +101,26 @@ export const createConnection = async (
       write(Messages.Authenticate, Authenticate.encode(authenticate));
 
       pingInterval = setInterval(() => {
+        if (socket.writableEnded) {
+          return;
+        }
+
         const ping = Ping.fromPartial({
           timestamp: Date.now(),
         });
 
         write(Messages.Ping, Ping.encode(ping));
       }, 15000);
+    });
 
-      events.on(MessageType.ServerSync, ({ maxBandwidth }) => {
-        setBitrate(calculateBitrate(maxBandwidth));
+    events.on(MessageType.ServerSync, ({ maxBandwidth }) => {
+      setBitrate(calculateBitrate(maxBandwidth));
 
-        resolve({
-          write,
-          writeAudio,
-          events,
-          disconnect,
-        });
+      resolve({
+        write,
+        writeAudio,
+        events,
+        disconnect,
       });
     });
 
@@ -122,8 +130,6 @@ export const createConnection = async (
       }
     });
 
-    events.on(Events.Error, (error) => {
-      reject(error);
-    });
+    events.on(Events.Error, reject);
   });
 };

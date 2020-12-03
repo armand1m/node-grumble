@@ -14,26 +14,28 @@ describe('node-grumble client integration tests', () => {
   it('should connect', async (done) => {
     jest.setTimeout(30000);
 
-    const connection = await NodeGrumble.connect({
+    const grumble = NodeGrumble.create({
       url: String(process.env.MUMBLE_SERVER_URL),
     });
 
-    connection.on(Events.Error, (error) => {
+    grumble.on(Events.Error, (error) => {
       console.error('Client errored:', error);
     });
 
-    connection.on(Events.Packet, (packet) => {
+    grumble.on(Events.Packet, (packet) => {
       console.log(packet);
     });
 
-    connection.on(MessageType.UserState, (userState) => {
+    grumble.on(MessageType.UserState, (userState) => {
       console.log(`UserState packet received: ${userState.name}`);
     });
 
-    connection.on(Events.Close, () => {
+    grumble.on(Events.Close, () => {
       console.log('Connection got closed.');
       done();
     });
+
+    const connection = await grumble.connect();
 
     connection.sendTextMessage('message-test');
 
@@ -51,7 +53,7 @@ describe('node-grumble client integration tests', () => {
     expect.assertions(1);
 
     await expect(
-      NodeGrumble.connect({ url: 'nonexistant.server' })
+      NodeGrumble.create({ url: 'nonexistant.server' }).connect()
     ).rejects.toThrowErrorMatchingSnapshot();
   });
 });
