@@ -4,7 +4,7 @@ import {
   Messages,
   NodeGrumbleOptions,
 } from './types';
-import { TextMessage, UserState } from './proto/Mumble';
+import { TextMessage } from './proto/Mumble';
 import { createConnection } from './connection/create-connection';
 import { createAudioHandlers } from './connection/create-audio-handlers';
 import { TypedEventEmitter } from './structures/EventEmitter';
