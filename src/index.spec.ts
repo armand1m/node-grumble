@@ -6,6 +6,12 @@ const testAudioPath = path.resolve(
   './__fixtures__/test.webm'
 );
 
+const wait = (time: number) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, time);
+  });
+};
+
 /**
  * TODO: Test more error scenarios.
  * TODO: Break the connection test into multiple scenarios.
@@ -40,9 +46,12 @@ describe('node-grumble client integration tests', () => {
     connection.sendTextMessage('message-test');
 
     await connection.playFile(testAudioPath, 0.2);
-    await connection.playFile(testAudioPath, 0.4);
-    await connection.playFile(testAudioPath, 0.6);
     await connection.playFile(testAudioPath);
+
+    connection.mute();
+    await wait(2000);
+    connection.unmute();
+    await wait(2000);
 
     setTimeout(() => {
       connection.disconnect();
@@ -55,5 +64,28 @@ describe('node-grumble client integration tests', () => {
     await expect(
       NodeGrumble.create({ url: 'nonexistant.server' }).connect()
     ).rejects.toThrowErrorMatchingSnapshot();
+  });
+
+  it('should connect and listen to state changes', async (done) => {
+    jest.setTimeout(30000);
+
+    const receivedData = jest.fn();
+    const grumble = NodeGrumble.create({
+      url: String(process.env.MUMBLE_SERVER_URL),
+    });
+
+    grumble.on(Events.Close, () => {
+      expect(receivedData).toHaveBeenCalled();
+      done();
+    });
+
+    grumble.state.users.subscribe(receivedData);
+    grumble.state.channels.subscribe(receivedData);
+
+    const connection = await grumble.connect();
+
+    setTimeout(() => {
+      connection.disconnect();
+    }, 5000);
   });
 });

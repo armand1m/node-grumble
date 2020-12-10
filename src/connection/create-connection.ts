@@ -8,13 +8,19 @@ import {
   MessageEventMap,
   EventMap,
 } from '../types';
-import { Authenticate, Ping, Version } from '../proto/Mumble';
+import {
+  Authenticate,
+  Ping,
+  UserState,
+  Version,
+} from '../proto/Mumble';
 import { encodeVersion } from '../proto/protobuf';
 import { createSocket } from './create-socket';
 import { TypedEventEmitter } from '../structures/EventEmitter';
+import { upsertUser } from './create-connection-state/create-users-observable';
 
 const defaultOptions: CompleteGrumbleOptions = {
-  url: 'localhost',
+  url: '0.0.0.0',
   port: 64738,
   rejectUnauthorized: false,
   name: 'node-grumble',
@@ -60,7 +66,9 @@ type Socket = ReturnType<typeof createSocket>;
 type ConnectionHandlers = Pick<
   Socket,
   'disconnect' | 'events' | 'write' | 'writeAudio'
->;
+> & {
+  user: UserState;
+};
 
 export const createConnection = async (
   options: NodeGrumbleOptions,
@@ -90,15 +98,16 @@ export const createConnection = async (
         osVersion: process.version,
       });
 
-      const authenticate = Authenticate.fromPartial({
-        username: completeOptions.name,
+      const authenticate = Authenticate.encode({
+        celtVersions: [],
+        opus: true,
         password: completeOptions.password,
         tokens: completeOptions.tokens,
-        opus: true,
+        username: completeOptions.name,
       });
 
       write(Messages.Version, version);
-      write(Messages.Authenticate, Authenticate.encode(authenticate));
+      write(Messages.Authenticate, authenticate);
 
       pingInterval = setInterval(() => {
         if (socket.writableEnded) {
@@ -113,10 +122,25 @@ export const createConnection = async (
       }, 15000);
     });
 
-    events.on(MessageType.ServerSync, ({ maxBandwidth }) => {
+    let users: UserState[] = [];
+
+    events.on(MessageType.UserState, (userState) => {
+      users = upsertUser(users, userState);
+    });
+
+    events.on(MessageType.ServerSync, ({ maxBandwidth, session }) => {
+      const user = users.find(($user) => $user.session === session);
+
+      if (!user) {
+        throw new Error(
+          'failed to find user for connection session.'
+        );
+      }
+
       setBitrate(calculateBitrate(maxBandwidth));
 
       resolve({
+        user,
         write,
         writeAudio,
         events,

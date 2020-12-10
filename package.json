@@ -23,6 +23,7 @@
     "@types/fluent-ffmpeg": "^2.1.16",
     "@types/jest": "^26.0.15",
     "@types/node": "^14.14.10",
+    "@types/zen-observable": "^0.8.1",
     "jest": "^26.6.3",
     "nodemon": "^2.0.6",
     "prettier": "^2.2.1",
@@ -38,7 +39,8 @@
     "fluent-ffmpeg": "^2.1.2",
     "long": "^4.0.0",
     "protobufjs": "^6.10.2",
-    "tslib": "^2.0.3"
+    "tslib": "^2.0.3",
+    "zen-observable": "^0.8.15"
   },
   "scripts": {
     "prebuild": "rm -rf ./build",
@@ -56,6 +58,8 @@
     "semantic-release": "semantic-release"
   },
   "release": {
-    "branches": ["main"]
+    "branches": [
+      "main"
+    ]
   }
 }

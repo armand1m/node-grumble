@@ -4,10 +4,11 @@ import {
   Messages,
   NodeGrumbleOptions,
 } from './types';
-import { TextMessage } from './proto/Mumble';
+import { TextMessage, UserState } from './proto/Mumble';
 import { createConnection } from './connection/create-connection';
 import { createAudioHandlers } from './connection/create-audio-handlers';
 import { TypedEventEmitter } from './structures/EventEmitter';
+import { createStateObservable } from './connection/create-connection-state';
 
 const connect = async (
   options: NodeGrumbleOptions,
@@ -47,6 +48,28 @@ const connect = async (
         TextMessage.encode(textMessage)
       );
     },
+    mute: () => {
+      const payload = UserState.fromPartial({
+        ...connection.user,
+        mute: true,
+        selfMute: true,
+      });
+
+      console.log(payload);
+      connection.write(Messages.UserState, UserState.encode(payload));
+    },
+    unmute: () => {
+      connection.write(
+        Messages.UserState,
+        UserState.encode(
+          UserState.fromPartial({
+            session: connection.user.session,
+            actor: connection.user.actor,
+            selfMute: false,
+          })
+        )
+      );
+    },
   };
 
   return handlers;
@@ -68,6 +91,8 @@ export const NodeGrumble = {
       MessageEventMap & EventMap
     >();
 
+    const state = createStateObservable(events);
+
     return {
       /**
        * ## `on(eventName, callback)`
@@ -80,6 +105,15 @@ export const NodeGrumble = {
        * from Mumble server.
        */
       on: events.on.bind(events),
+      /**
+       * ## state
+       *
+       * Makes the server state available through Observable instances.
+       * These are more friendly alternatives to use when building user interfaces
+       * using this library, . You can always use `grumble.on` instead if you ever
+       * need to listen to raw events.
+       */
+      state,
       /**
        * ## `NodeGrumble.connect()`
        *

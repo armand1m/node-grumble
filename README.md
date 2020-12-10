@@ -18,11 +18,11 @@ This library is still new and there are a lot of unstabilities. Expect Breaking 
  - Channel Features
     - [ ] Set Channel
     - [ ] Listen multiple channels
-    - [ ] Observe channel changes
+    - [x] Observe channel changes
  - User Features
     - [ ] List users in the server
     - [ ] List users in a channel
-    - [ ] Observe changes in users states
+    - [x] Observe changes in users states
  - Text Features
     - [x] Send text to a Channel
     - [ ] Send text to a User
