@@ -14,10 +14,11 @@ import {
 import { TypedEventEmitter } from '../structures/EventEmitter';
 import { createAudioInterface } from './create-audio-interface';
 
-export const createSocket = (
+export const createSocket = async (
   finalOptions: CompleteGrumbleOptions,
   events: TypedEventEmitter<MessageEventMap & EventMap>
 ) => {
+  const { decodeMessage } = await createMumbleProtobufDecoder();
   const socket = tls.connect(
     finalOptions.port,
     finalOptions.url,
@@ -34,8 +35,6 @@ export const createSocket = (
   });
 
   socket.on('data', async (data: Buffer) => {
-    const { decodeMessage } = await createMumbleProtobufDecoder();
-
     /**
      * Data Ingestion Loop.
      *

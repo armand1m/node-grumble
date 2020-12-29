@@ -58,7 +58,7 @@ const calculateBitrate = (maxBandwidth: number) => {
 
 type Socket = ReturnType<typeof createSocket>;
 type ConnectionHandlers = Pick<
-  Socket,
+  UnwrapPromise<Socket>,
   'disconnect' | 'events' | 'write' | 'writeAudio'
 >;
 
@@ -66,7 +66,7 @@ export const createConnection = async (
   options: NodeGrumbleOptions,
   events: TypedEventEmitter<MessageEventMap & EventMap>
 ) => {
-  return new Promise<ConnectionHandlers>((resolve, reject) => {
+  return new Promise<ConnectionHandlers>(async (resolve, reject) => {
     const completeOptions: CompleteGrumbleOptions = {
       ...defaultOptions,
       ...options,
@@ -78,7 +78,7 @@ export const createConnection = async (
       writeAudio,
       setBitrate,
       disconnect,
-    } = createSocket(completeOptions, events);
+    } = await createSocket(completeOptions, events);
 
     let pingInterval: NodeJS.Timeout | undefined;
 
