@@ -3,6 +3,7 @@ import { NodeGrumble, Events, MessageType } from '../';
 const main = async () => {
   const grumble = NodeGrumble.create({
     url: String(process.env.MUMBLE_SERVER_URL),
+    name: String(process.env.MUMBLE_USERNAME ?? 'node-grumble')
   });
 
   grumble.on(Events.Connected, () => {

@@ -134,6 +134,6 @@ Besides all of that, I wanted to learn a bit more about the UDP protocol, Protoc
 ## Credits
 
 - All the NoodleJS developers, it wouldn't happen without much of the code I ~~stole~~ borrowed from them.
-- Rafael Martins, for bootstraping one of the bots that motivated me to end up writing this.
+- [Rafael Martins](https://github.com/rafael-martins), for bootstraping one of the bots that motivated me to end up writing this.
 - [Guilherme Lima](https://github.com/guilhermelimak), for accepting me breaking his murmur instance with this and for exposing me to Mumble.
 - Armando Magalhaes (me), for spending my time writing and testing all of this.
